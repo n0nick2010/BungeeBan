@@ -6,6 +6,8 @@ import net.craftminecraft.bungee.bungeeban.BanManager;
 import net.craftminecraft.bungee.bungeeban.BungeeBan;
 import net.craftminecraft.bungee.bungeeban.banstore.BanEntry;
 import net.craftminecraft.bungee.bungeeban.util.Utils;
+import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.Server;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.event.ServerConnectEvent;
@@ -46,6 +48,26 @@ public class ProxiedPlayerListener implements Listener {
 			Server srv = e.getPlayer().getServer();
 			if (srv != null)
 				e.setTarget(srv.getInfo());
+			else{
+				// if a player join the Server
+				if(!e.getTarget().getName().equalsIgnoreCase("login"))
+				{
+					// the player is not in default server
+					
+					// check ban on default server
+					BanEntry banDefault = BanManager.getBan(e.getPlayer().getName(), "Login");
+					
+					if(banDefault == null)
+					{
+						// the player is not banned on default server => move to defaut
+						ServerInfo target = ProxyServer.getInstance().getServerInfo("Login");
+						e.setTarget(target);
+						e.getPlayer().sendMessage("You have been moved to default server");
+						return;
+					}
+				
+				}
+			}
 			e.getPlayer().disconnect(Utils.formatMessage(ban.getReason(), ban));
 			return;
 		} 
@@ -55,6 +77,26 @@ public class ProxiedPlayerListener implements Listener {
 			Server srv = e.getPlayer().getServer();
 			if (srv != null)
 				e.setTarget(srv.getInfo());
+			else{
+				// if a player join the Server
+				if(!e.getTarget().getName().equalsIgnoreCase("login"))
+				{
+					// the player is not in default server
+					
+					// check ban on default server
+					BanEntry banDefault = BanManager.getBan(e.getPlayer().getName(), "Login");
+					
+					if(banDefault == null)
+					{
+						// the player is not banned on default server => move to defaut
+						ServerInfo target = ProxyServer.getInstance().getServerInfo("Login");
+						e.setTarget(target);
+						e.getPlayer().sendMessage("You have been moved to default server");
+						return;
+					}
+				
+				}
+			}
 			e.getPlayer().disconnect(Utils.formatMessage(ban.getReason(), ban));
 		}
 		return;
