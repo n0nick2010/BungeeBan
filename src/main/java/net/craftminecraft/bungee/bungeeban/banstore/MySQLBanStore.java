@@ -141,6 +141,7 @@ public class MySQLBanStore implements IBanStore {
 
 	@Override
 	public Table<String,String,BanEntry> getBanList() {
+		removeExpired();
 		try {
 			ResultSet rs = connection.query("SELECT * FROM bungeeban_playerbans");
 			Table<String,String,BanEntry> entries = HashBasedTable.create();
@@ -173,6 +174,7 @@ public class MySQLBanStore implements IBanStore {
 
 	@Override
 	public Table<String,String,BanEntry> getIPBanList() {
+		removeExpired();
 		try {
 			ResultSet rs = connection.query("SELECT * FROM bungeeban_ipbans");
 			Table<String,String,BanEntry> entries = HashBasedTable.create();
@@ -205,6 +207,7 @@ public class MySQLBanStore implements IBanStore {
 
 	@Override
 	public BanEntry isBanned(String player, String server) {
+		removeExpired();
 		PreparedStatement stmt;
 		try {
 			stmt = connection.prepare("SELECT * FROM bungeeban_playerbans WHERE banned = ? " +
@@ -239,6 +242,7 @@ public class MySQLBanStore implements IBanStore {
 
 	@Override
 	public BanEntry isIPBanned(String ip, String server) {
+		removeExpired();
 		PreparedStatement stmt;
 		try {
 			stmt = connection.prepare("SELECT * FROM bungeeban_ipbans WHERE player = ? AND server = ?");
@@ -274,6 +278,28 @@ public class MySQLBanStore implements IBanStore {
 	@Override
 	public void reloadBanList() {
 		return;
+	}
+	
+	private void removeExpired()
+	{
+		try
+		{
+			PreparedStatement stmt = connection.prepare("DELETE FROM bungeeban_playerbans WHERE expiry < NOW( )");
+			connection.query(stmt);
+		} catch (SQLException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try
+		{
+			PreparedStatement stmt = connection.prepare("DELETE FROM bungeeban_ipbans WHERE expiry < NOW( )");
+			connection.query(stmt);
+		} catch (SQLException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }
