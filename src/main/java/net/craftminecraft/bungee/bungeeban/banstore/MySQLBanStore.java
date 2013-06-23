@@ -121,6 +121,8 @@ public class MySQLBanStore implements IBanStore {
 		if (!Base.hasConnection()) {
 			Base.open(bonecp);
 		}
+		this.removeExpired();
+		
 		Table<String, String, BanEntry> returnval = HashBasedTable.create();
 		List<SqlPlayerBanEntry> entries = SqlPlayerBanEntry.findAll();
 		for (SqlPlayerBanEntry entry : entries) {
@@ -135,6 +137,8 @@ public class MySQLBanStore implements IBanStore {
 		if (!Base.hasConnection()) {
 			Base.open(bonecp);
 		}
+		this.removeExpired();
+		
 		Table<String, String, BanEntry> returnval = HashBasedTable.create();
 		List<SqlIPBanEntry> entries = SqlIPBanEntry.findAll();
 		for (SqlIPBanEntry entry : entries) {
@@ -175,24 +179,8 @@ public class MySQLBanStore implements IBanStore {
 	
 	private void removeExpired()
 	{
-		try
-		{
-			PreparedStatement stmt = connection.prepare("DELETE FROM bungeeban_playerbans WHERE expiry < NOW( )");
-			connection.query(stmt);
-		} catch (SQLException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		try
-		{
-			PreparedStatement stmt = connection.prepare("DELETE FROM bungeeban_ipbans WHERE expiry < NOW( )");
-			connection.query(stmt);
-		} catch (SQLException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		SqlIPBanEntry.delete("expiry < NOW()");
+		SqlPlayerBanEntry.delete("expiry < NOW()");
 	}
 
 	private boolean isTable(String table, Connection connection) {
