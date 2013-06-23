@@ -117,37 +117,6 @@ public class MySQLBanStore implements IBanStore {
 	}
 
 	@Override
-<<<<<<< HEAD
-	public Table<String,String,BanEntry> getBanList() {
-		removeExpired();
-		try {
-			ResultSet rs = connection.query("SELECT * FROM bungeeban_playerbans");
-			Table<String,String,BanEntry> entries = HashBasedTable.create();
-			if (rs.first()) {
-				do {
-					try {
-						BanEntry.Builder builder = new BanEntry.Builder(rs.getString("banned"))
-							.created(dateFormat.parse(rs.getString("created")))
-							.server(rs.getString("server"))
-							.reason(rs.getString("reason"))
-							.source(rs.getString("source"));
-						if (rs.getNString("expiry") != null) {
-							builder.expiry(dateFormat.parse(rs.getNString("expiry")));
-						}
-						BanEntry entry = builder.build();
-						entries.put(entry.getBanned(),entry.getServer(),entry);
-					} catch (ParseException e) {
-						logger.severe("Invalid date format for entry " + rs.getString("banned") +
-							":" + rs.getString("server"));
-						continue;
-					}
-				} while (rs.next());
-			}
-			return entries;
-		} catch (SQLException e) {
-			logger.severe("getBanList failed, " + e.getMessage());
-			return null;
-=======
 	public Table<String, String, BanEntry> getBanList() {
 		if (!Base.hasConnection()) {
 			Base.open(bonecp);
@@ -157,47 +126,14 @@ public class MySQLBanStore implements IBanStore {
 		for (SqlPlayerBanEntry entry : entries) {
 			BanEntry beentry = entry.toBanEntry();
 			returnval.put(beentry.getBanned(), beentry.getServer(), beentry);
->>>>>>> a20ebe62b287721bf8c42889c3b3cfa994b38de3
 		}
 		return returnval;
 	}
 
 	@Override
-<<<<<<< HEAD
-	public Table<String,String,BanEntry> getIPBanList() {
-		removeExpired();
-		try {
-			ResultSet rs = connection.query("SELECT * FROM bungeeban_ipbans");
-			Table<String,String,BanEntry> entries = HashBasedTable.create();
-			if (rs.first()) {
-				do {
-					try {
-						BanEntry.Builder builder = new BanEntry.Builder(rs.getString("banned"))
-							.created(dateFormat.parse(rs.getString("created")))
-							.server(rs.getString("server"))
-							.reason(rs.getString("reason"))
-							.source(rs.getString("source"));
-						if (rs.getNString("expiry") != null) {
-							builder.expiry(dateFormat.parse(rs.getNString("expiry")));
-						}
-						BanEntry entry = builder.ipban().build();
-						entries.put(entry.getBanned(),entry.getServer(),entry);
-					} catch (ParseException e) {
-						logger.severe("Invalid date format for entry " + rs.getString("banned") +
-							":" + rs.getString("server"));
-						continue;
-					}
-				} while (rs.next());
-			}
-			return entries;
-		} catch (SQLException e) {
-			logger.severe("getBanList failed, " + e.getMessage());
-			return null;
-=======
 	public Table<String, String, BanEntry> getIPBanList() {
 		if (!Base.hasConnection()) {
 			Base.open(bonecp);
->>>>>>> a20ebe62b287721bf8c42889c3b3cfa994b38de3
 		}
 		Table<String, String, BanEntry> returnval = HashBasedTable.create();
 		List<SqlIPBanEntry> entries = SqlIPBanEntry.findAll();
@@ -210,42 +146,11 @@ public class MySQLBanStore implements IBanStore {
 
 	@Override
 	public BanEntry isBanned(String player, String server) {
-<<<<<<< HEAD
-		removeExpired();
-		PreparedStatement stmt;
-		try {
-			stmt = connection.prepare("SELECT * FROM bungeeban_playerbans WHERE banned = ? " +
-				    "AND server = ?");
-			stmt.setString(1, player);
-			stmt.setString(2, server);
-			ResultSet rs = connection.query(stmt);
-			
-			if (rs.first()) {
-					try {
-						BanEntry.Builder builder = new BanEntry.Builder(rs.getString("banned"))
-							.created(dateFormat.parse(rs.getString("created")))
-							.server(rs.getString("server"))
-							.reason(rs.getString("reason"))
-							.source(rs.getString("source"));
-						if (rs.getNString("expiry") != null) {
-							builder.expiry(dateFormat.parse(rs.getNString("expiry")));
-						}
-						return builder.build();
-					} catch (ParseException e) {
-						logger.severe("Invalid date format for entry " + rs.getString("banned") +
-							":" + rs.getString("server"));
-						return null;
-					}
-			}
-		} catch (SQLException e) {
-			logger.severe("isBanned failed, " + e.getMessage());
-=======
 		if (!Base.hasConnection()) {
 			Base.open(bonecp);
 		}
 		List<SqlPlayerBanEntry> entries = SqlPlayerBanEntry.where("banned = ? AND server = ?", player, server);
 		if (entries.size() < 1) {
->>>>>>> a20ebe62b287721bf8c42889c3b3cfa994b38de3
 			return null;
 		}
 		return entries.get(0).toBanEntry();
@@ -253,43 +158,11 @@ public class MySQLBanStore implements IBanStore {
 
 	@Override
 	public BanEntry isIPBanned(String ip, String server) {
-<<<<<<< HEAD
-		removeExpired();
-		PreparedStatement stmt;
-		try {
-			stmt = connection.prepare("SELECT * FROM bungeeban_ipbans WHERE player = ? AND server = ?");
-			stmt.setString(1, ip);
-			stmt.setString(2, server);
-			ResultSet rs = connection.query(stmt);
-			
-			if (rs.first()) {
-					try {
-						BanEntry.Builder builder = new BanEntry.Builder(rs.getString("banned"))
-							.created(dateFormat.parse(rs.getString("created")))
-							.server(rs.getString("server"))
-							.reason(rs.getString("reason"))
-							.source(rs.getString("source"));
-						if (rs.getNString("expiry") != null) {
-							builder.expiry(dateFormat.parse(rs.getNString("expiry")));
-						}
-						return builder.ipban().build();
-					} catch (ParseException e) {
-						logger.severe("Invalid date format for entry " + rs.getString("banned") +
-							":" + rs.getString("server"));
-						return null;
-					}
-			}
-			
-			return null;
-		} catch (SQLException e) {
-			logger.severe("Global UnbanIP failed, " + e.getMessage());
-=======
 		if (!Base.hasConnection()) {
 			Base.open(bonecp);
 		}
 		List<SqlIPBanEntry> entries = SqlIPBanEntry.where("banned = ? AND server = ?", ip, server);
 		if (entries.size() < 1) {
->>>>>>> a20ebe62b287721bf8c42889c3b3cfa994b38de3
 			return null;
 		}
 		return entries.get(0).toBanEntry();
