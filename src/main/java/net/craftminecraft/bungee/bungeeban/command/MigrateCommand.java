@@ -8,7 +8,7 @@ import net.craftminecraft.bungee.bungeeban.banstore.IBanStore;
 import net.craftminecraft.bungee.bungeeban.banstore.MySQLBanStore;
 import net.craftminecraft.bungee.bungeeban.util.MainConfig;
 import net.craftminecraft.bungee.bungeeban.util.Utils;
-import net.craftminecraft.bungee.bungeeyaml.InvalidConfigurationException;
+import net.craftminecraft.bungee.bungeeyaml.bukkitapi.InvalidConfigurationException;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -22,37 +22,43 @@ public class MigrateCommand extends Command {
 	}
 	
 	@Override
-	public void execute(CommandSender sender, String[] args) {
-		if (sender instanceof ProxiedPlayer) {
-			if (!Utils.hasPermission(sender, "migrate", "")) {
-				return;
+	public void execute(final CommandSender sender, final String[] args) {
+		plugin.getProxy().getScheduler().runAsync(plugin, new Runnable() {
+			
+			@Override
+			public void run() {
+				if (sender instanceof ProxiedPlayer) {
+					if (!Utils.hasPermission(sender, "migrate", "")) {
+						return;
+					}
+				}
+				if (args.length != 1) {
+					sender.sendMessage(ChatColor.RED + "Wrong command format. <required> [optional]");
+					sender.sendMessage(ChatColor.RED + "/migrate <mysql|file>");
+					return;
+				}
+				IBanStore store;
+				if (args[0].equals("file")) {
+					store = new FileBanStore(plugin);
+				} else if (args[0].equals("mysql")) {
+					store = new MySQLBanStore(MigrateCommand.this.plugin.getLogger(), MainConfig.getInstance());
+				} else {
+					sender.sendMessage(ChatColor.RED + "Wrong command format. <required> [optional]");
+					sender.sendMessage(ChatColor.RED + "/migrate <mysql|file>");
+					return;
+				}
+				for (BanEntry entry : BanManager.getBanList()) {
+					store.ban(entry);
+				}
+				BanManager.setBanStore(store);
+				MainConfig.getInstance().storagetype = args[0];
+				try {
+					MainConfig.getInstance().save();
+				} catch (InvalidConfigurationException e) {
+					e.printStackTrace();
+				}
+				sender.sendMessage("Bans successfully moved to new banstore type");	
 			}
-		}
-		if (args.length != 1) {
-			sender.sendMessage(ChatColor.RED + "Wrong command format. <required> [optional]");
-			sender.sendMessage(ChatColor.RED + "/migrate <mysql|file>");
-			return;
-		}
-		IBanStore store;
-		if (args[0].equals("file")) {
-			store = new FileBanStore(plugin);
-		} else if (args[0].equals("mysql")) {
-			store = new MySQLBanStore(this.plugin.getLogger(), MainConfig.getInstance());
-		} else {
-			sender.sendMessage(ChatColor.RED + "Wrong command format. <required> [optional]");
-			sender.sendMessage(ChatColor.RED + "/migrate <mysql|file>");
-			return;
-		}
-		for (BanEntry entry : BanManager.getBanList()) {
-			store.ban(entry);
-		}
-		BanManager.setBanStore(store);
-		MainConfig.getInstance().storagetype = args[0];
-		try {
-			MainConfig.getInstance().save();
-		} catch (InvalidConfigurationException e) {
-			e.printStackTrace();
-		}
-		sender.sendMessage("Bans successfully moved to new banstore type");
+		});
 	}
 }
